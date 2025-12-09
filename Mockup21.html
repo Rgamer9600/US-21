@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estadísticas de Ventas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .box { border:1px solid #000; padding:2rem; max-width:400px; margin:2rem auto; display:flex; flex-direction:column; gap:1rem; background-color:#fff; }
+    .panel-box { border:1px solid #000; padding:1rem; margin-top:1rem; border-radius:0; }
+    .success { background-color:#d5e8d4; border-color:#82b366; }
+    .info { background-color:#d1ecf1; border-color:#0c5460; }
+    .warning { background-color:#fff3cd; border-color:#856404; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="box">
+      <h3 class="text-center">Estadísticas de Ventas</h3>
+
+      <div class="mb-3">
+        <label class="form-label">Período</label>
+        <select class="form-select" id="periodo">
+          <option value="">Seleccionar período...</option>
+          <option value="diario">Diario</option>
+          <option value="mensual">Mensual</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Tipo de Estadística</label>
+        <select class="form-select" id="tipoEstadistica">
+          <option value="resumen">Resumen completo</option>
+          <option value="total-pedidos">Total de pedidos</option>
+          <option value="total-ventas">Total de ventas</option>
+          <option value="pedidos-pagados">Pedidos pagados</option>
+        </select>
+      </div>
+
+      <button id="btnVer" class="btn btn-primary w-100">Ver Estadísticas</button>
+    </div>
+
+    <div class="panel-box success" id="resumen-diario" style="display:none;">
+      <h5>📊 Resumen Diario</h5>
+      <div id="datos-diarios">
+        <!-- Los datos se cargarán dinámicamente -->
+        <p class="mb-1"><strong>Total de pedidos:</strong> <span id="total-pedidos-dia">0</span></p>
+        <p class="mb-1"><strong>Total de ventas:</strong> $<span id="total-ventas-dia">0.00</span></p>
+        <p class="mb-1"><strong>Pedidos pagados:</strong> <span id="pedidos-pagados-dia">0</span></p>
+        <p class="mb-1"><strong>Tasa de conversión:</strong> <span id="tasa-conversion-dia">0%</span></p>
+      </div>
+    </div>
+
+    <div class="panel-box info" id="resumen-mensual" style="display:none;">
+      <h5>📈 Resumen Mensual</h5>
+      <div id="datos-mensuales">
+        <p class="mb-1"><strong>Total de pedidos:</strong> <span id="total-pedidos-mes">0</span></p>
+        <p class="mb-1"><strong>Total de ventas:</strong> $<span id="total-ventas-mes">0.00</span></p>
+        <p class="mb-1"><strong>Pedidos pagados:</strong> <span id="pedidos-pagados-mes">0</span></p>
+        <p class="mb-1"><strong>Ventas promedio por día:</strong> $<span id="venta-promedio-mes">0.00</span></p>
+      </div>
+    </div>
+
+    <div class="panel-box warning" id="detalle-estadistica" style="display:none;">
+      <h5 id="titulo-detalle">Detalle Específico</h5>
+      <div id="datos-detalle">
+        <!-- Se mostrará el detalle específico según el tipo seleccionado -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const btnVer = document.getElementById('btnVer');
+
+    // Datos de ejemplo (simulados)
+    const datosEjemplo = {
+      diario: {
+        'total-pedidos': 45,
+        'total-ventas': 1250.75,
+        'pedidos-pagados': 38,
+        'fecha': new Date().toLocaleDateString('es-ES')
+      },
+      mensual: {
+        'total-pedidos': 1250,
+        'total-ventas': 34250.50,
+        'pedidos-pagados': 1050,
+        'promedio-diario': 1141.68,
+        'mes': new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+      }
+    };
+
+    btnVer.addEventListener('click', () => {
+      const periodo = document.getElementById('periodo').value;
+      const tipoEstadistica = document.getElementById('tipoEstadistica').value;
+
+      // Ocultar todos los paneles
+      document.getElementById('resumen-diario').style.display = 'none';
+      document.getElementById('resumen-mensual').style.display = 'none';
+      document.getElementById('detalle-estadistica').style.display = 'none';
+
+      if (!periodo) {
+        alert("Por favor, seleccione un período");
+        return;
+      }
+
+      if (tipoEstadistica === 'resumen') {
+        // Mostrar resumen completo
+        if (periodo === "diario") {
+          document.getElementById('resumen-diario').style.display = 'block';
+          cargarDatosDiarios();
+        } else if (periodo === "mensual") {
+          document.getElementById('resumen-mensual').style.display = 'block';
+          cargarDatosMensuales();
+        }
+      } else {
+        // Mostrar detalle específico
+        document.getElementById('detalle-estadistica').style.display = 'block';
+        mostrarDetalleEstadistica(periodo, tipoEstadistica);
+      }
+    });
+
+    function cargarDatosDiarios() {
+      const datos = datosEjemplo.diario;
+      const tasaConversion = ((datos['pedidos-pagados'] / datos['total-pedidos']) * 100).toFixed(1);
+      
+      document.getElementById('total-pedidos-dia').textContent = datos['total-pedidos'];
+      document.getElementById('total-ventas-dia').textContent = datos['total-ventas'].toFixed(2);
+      document.getElementById('pedidos-pagados-dia').textContent = datos['pedidos-pagados'];
+      document.getElementById('tasa-conversion-dia').textContent = `${tasaConversion}%`;
+      
+      // Actualizar título
+      document.querySelector('#resumen-diario h5').textContent = `📊 Resumen Diario - ${datos.fecha}`;
+    }
+
+    function cargarDatosMensuales() {
+      const datos = datosEjemplo.mensual;
+      
+      document.getElementById('total-pedidos-mes').textContent = datos['total-pedidos'];
+      document.getElementById('total-ventas-mes').textContent = datos['total-ventas'].toFixed(2);
+      document.getElementById('pedidos-pagados-mes').textContent = datos['pedidos-pagados'];
+      document.getElementById('venta-promedio-mes').textContent = datos['promedio-diario'].toFixed(2);
+      
+      // Actualizar título
+      document.querySelector('#resumen-mensual h5').textContent = `📈 Resumen Mensual - ${datos.mes}`;
+    }
+
+    function mostrarDetalleEstadistica(periodo, tipo) {
+      const datos = datosEjemplo[periodo];
+      const tituloDetalle = document.getElementById('titulo-detalle');
+      const datosDetalle = document.getElementById('datos-detalle');
+      
+      let titulo = '';
+      let contenido = '';
+      
+      switch(tipo) {
+        case 'total-pedidos':
+          titulo = '📦 Total de Pedidos';
+          contenido = `
+            <p class="mb-1"><strong>Período:</strong> ${periodo === 'diario' ? datos.fecha : datos.mes}</p>
+            <p class="mb-1"><strong>Total de pedidos:</strong> ${datos['total-pedidos']}</p>
+            <p class="mb-1"><strong>Pedidos pagados:</strong> ${datos['pedidos-pagados']}</p>
+            <p class="mb-1"><strong>Pedidos pendientes:</strong> ${datos['total-pedidos'] - datos['pedidos-pagados']}</p>
+          `;
+          break;
+          
+        case 'total-ventas':
+          titulo = '💰 Total de Ventas';
+          contenido = `
+            <p class="mb-1"><strong>Período:</strong> ${periodo === 'diario' ? datos.fecha : datos.mes}</p>
+            <p class="mb-1"><strong>Ventas totales:</strong> $${datos['total-ventas'].toFixed(2)}</p>
+            ${periodo === 'mensual' ? `<p class="mb-1"><strong>Ventas promedio diarias:</strong> $${datos['promedio-diario'].toFixed(2)}</p>` : ''}
+            <p class="mb-1"><strong>Pedidos asociados:</strong> ${datos['pedidos-pagados']}</p>
+          `;
+          break;
+          
+        case 'pedidos-pagados':
+          titulo = '✅ Pedidos Pagados';
+          contenido = `
+            <p class="mb-1"><strong>Período:</strong> ${periodo === 'diario' ? datos.fecha : datos.mes}</p>
+            <p class="mb-1"><strong>Pedidos pagados:</strong> ${datos['pedidos-pagados']}</p>
+            <p class="mb-1"><strong>Total de pedidos:</strong> ${datos['total-pedidos']}</p>
+            <p class="mb-1"><strong>Tasa de conversión:</strong> ${((datos['pedidos-pagados'] / datos['total-pedidos']) * 100).toFixed(1)}%</p>
+            <p class="mb-1"><strong>Ventas generadas:</strong> $${datos['total-ventas'].toFixed(2)}</p>
+          `;
+          break;
+      }
+      
+      tituloDetalle.textContent = titulo;
+      datosDetalle.innerHTML = contenido;
+    }
+  </script>
+</body>
+</html>
